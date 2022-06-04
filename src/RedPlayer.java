@@ -1,4 +1,6 @@
 import java.lang.InterruptedException;
+import java.util.ArrayList;
+import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.TimeUnit;
 import jade.core.AID;
 import jade.core.Agent;
@@ -107,15 +109,15 @@ public class RedPlayer extends Agent {
     public int[][] generateFillGameField() {
         int[][] gameField =
                 {   {0, 0, 0, 1, 0, 0, 0, 0, 0, 0},
-                        {0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
-                        {0, 1, 0, 0, 0, 0, 0, 1, 0, 0},
-                        {0, 0, 0, 1, 0, 0, 0, 1, 0, 0},
-                        {0, 0, 0, 0, 0, 0, 0, 1, 0, 0},
-                        {0, 0, 0, 0, 0, 1, 0, 1, 0, 0},
+                        {0, 0, 0, 0, 1, 1, 1, 1, 0, 0},
+                        {0, 1, 0, 0, 0, 0, 0, 0, 0, 0},
+                        {0, 0, 0, 1, 0, 0, 0, 0, 0, 1},
+                        {0, 0, 0, 0, 0, 0, 0, 0, 0, 1},
+                        {0, 0, 0, 0, 0, 1, 0, 0, 0, 1},
                         {0, 0, 0, 0, 0, 1, 0, 0, 0, 0},
                         {0, 0, 1, 1, 0, 0, 0, 1, 1, 1},
                         {0, 0, 0, 0, 0, 1, 0, 0, 0, 0},
-                        {1, 0, 0, 0, 0, 1, 0, 1, 1, 1}  };
+                        {1, 0, 0, 0, 0, 1, 0, 0, 0, 0}  };
 
         return gameField;
     }
@@ -146,13 +148,68 @@ public class RedPlayer extends Agent {
      */
     public Point getCoordinateForShoot() {
 
+        Point coordinate = getCoordinateByGameFieldContext();
+
+        if ((int)coordinate.getX() == -1) {
+            ArrayList<Point> coordinateList = new ArrayList<>();
+
+            for (int y = 0; y < this.enemyGameField.length; y++) {
+                for (int x = 0; x < this.enemyGameField[y].length; x++) {
+                    if (this.enemyGameField[y][x] == 0) {
+                        coordinateList.add(new Point(x, y));
+                    }
+                }
+            }
+
+            if (!coordinateList.isEmpty()) {
+                int i = ThreadLocalRandom.current().nextInt(0, coordinateList.size() - 1);
+                coordinate = coordinateList.get(i);
+            }
+        }
+
+        return coordinate;
+    }
+
+    public Point getCoordinateByGameFieldContext() {
+
+        ArrayList<Point> coordinateList = new ArrayList<>();
+
         for (int y = 0; y < this.enemyGameField.length; y++) {
             for (int x = 0; x < this.enemyGameField[y].length; x++) {
-                if (this.enemyGameField[y][x] == 0) {
-                    return new Point(x, y);
+                if (this.enemyGameField[y][x] == 1) {
+                    coordinateList.add(new Point(x, y));
                 }
             }
         }
+
+        for (int i = 0; i < coordinateList.size(); i++) {
+            int x = (int)coordinateList.get(i).getX();
+            int y = (int)coordinateList.get(i).getY();
+
+            if (x != -1) {
+                if ((y - 1) >= 0) {
+                    if (this.enemyGameField[y - 1][x] == 0) {
+                        return new Point(x, y - 1);
+                    }
+                }
+                if ((y + 1) < this.enemyGameField.length) {
+                    if (this.enemyGameField[y + 1][x] == 0) {
+                        return new Point(x, y + 1);
+                    }
+                }
+                if ((x - 1) >= 0) {
+                    if (this.enemyGameField[y][x - 1] == 0) {
+                        return new Point(x - 1, y);
+                    }
+                }
+                if ((x + 1) < this.enemyGameField[y].length) {
+                    if (this.enemyGameField[y][x + 1] == 0) {
+                        return new Point(x + 1, y);
+                    }
+                }
+            }
+        }
+
         return new Point(-1, -1);
     }
 
