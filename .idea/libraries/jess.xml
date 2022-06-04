@@ -1,0 +1,13 @@
+<component name="libraryTable">
+  <library name="jess">
+    <CLASSES>
+      <root url="jar://$PROJECT_DIR$/../../../../Jess71p2/lib/jess.jar!/" />
+    </CLASSES>
+    <JAVADOC>
+      <root url="file://$PROJECT_DIR$/../../../../Jess71p2/docs/api" />
+    </JAVADOC>
+    <SOURCES>
+      <root url="file://$PROJECT_DIR$/../../../../Jess71p2/examples/pricing_engine" />
+    </SOURCES>
+  </library>
+</component>
