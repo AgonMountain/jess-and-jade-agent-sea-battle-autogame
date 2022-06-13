@@ -17,8 +17,8 @@ public class Player1 extends Agent {
     String enemyPlayerName = "Player2";
     int millisecondsTimeOut = 250;
 
-    public int[][] myGameField;
-    public int[][] enemyGameField;
+    public String[][] myGameField;
+    public String[][] enemyGameField;
     public final int WIN_NUMBER = 20;
 
     public void setup() {
@@ -47,7 +47,7 @@ public class Player1 extends Agent {
             TimeUnit.SECONDS.sleep(1);
         } catch (InterruptedException e) { }
 
-        System.out.println("Start game: Sea battle");
+        System.out.println("Start game: Sea auto-battle");
         System.out.println("\nPlayer:\t\t\tCoordinate:\t\t\tResult:");
         sendMessage("start");
     }
@@ -69,19 +69,29 @@ public class Player1 extends Agent {
         else if (command.equals("shoot")) {
             Point coordinate = new Point(Integer.parseInt(split[2]), Integer.parseInt(split[1]));
             switch (this.myGameField[(int)coordinate.getY()][(int)coordinate.getX()]) {
-                case 1:
+                case "#":
                     printGameStepInfo(enemyPlayerName, coordinate, "hit");
-                    sendMessage(generateMessage("result", coordinate, 1));
+                    sendMessage("result," + toString(coordinate) + "," + "#");
                     break;
-                case 0:
+                case "":
                     printGameStepInfo(enemyPlayerName, coordinate, "away");
-                    sendMessage(generateMessage("result", coordinate, -1));
+                    sendMessage("result," + toString(coordinate) + "," + ".");
                     break;
             }
         }
+        else if (command.equals("ship_is_destroyed")) {
+            // ship_is_destroyed,1,1,1,2,1,3,1,4
+
+            for (int i = 0; i < (split.length - 1) / 2; i++) {
+                Point coordinate = new Point(Integer.parseInt(split[2+i]), Integer.parseInt(split[1+i]));
+                updateGameField(coordinate);
+            }
+
+        }
         else if (command.equals("result")) {
             Point coordinate = new Point(Integer.parseInt(split[2]), Integer.parseInt(split[1]));
-            int result = Integer.parseInt(split[3]);
+            String result = split[3];
+
             this.enemyGameField[(int)coordinate.getY()][(int)coordinate.getX()] = result;
             if (isWin()) {
                 System.out.println("\n====================================================");
@@ -89,7 +99,7 @@ public class Player1 extends Agent {
                 printGameField();
                 sendMessage("end");
             }
-            else if (result == 1){
+            else if (result.equals("#")){
                 shoot(getCoordinateForShoot());
             }
             else {
@@ -106,7 +116,7 @@ public class Player1 extends Agent {
 
         for (int y = 0; y < this.enemyGameField.length; y++) {
             for (int x = 0; x < this.enemyGameField[y].length; x++) {
-                if (this.enemyGameField[y][x] == 1) {
+                if (this.enemyGameField[y][x].equals("#")) {
                     ++winNumber;
                 }
             }
@@ -115,28 +125,29 @@ public class Player1 extends Agent {
         return (winNumber == this.WIN_NUMBER);
     }
 
-    public int[][] generateFillGameField() {
-        int[][] gameField =
-                {   {0, 0, 0, 1, 0, 0, 0, 0, 0, 0},
-                        {0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
-                        {0, 1, 0, 0, 0, 0, 0, 1, 0, 0},
-                        {0, 0, 0, 1, 0, 0, 0, 1, 0, 0},
-                        {0, 0, 0, 0, 0, 0, 0, 1, 0, 0},
-                        {0, 0, 0, 0, 0, 1, 0, 1, 0, 0},
-                        {0, 0, 0, 0, 0, 1, 0, 0, 0, 0},
-                        {0, 0, 1, 1, 0, 0, 0, 1, 1, 1},
-                        {0, 0, 0, 0, 0, 1, 0, 0, 0, 0},
-                        {1, 0, 0, 0, 0, 1, 0, 1, 1, 1}  };
+    public String[][] generateFillGameField() {
+        String[][] gameField =
+                {       {"", "", "", "", "#", "", "", "", "#", ""},
+                        {"", "", "", "", "", "", "", "", "#", ""},
+                        {"", "", "", "", "", "", "", "", "#", ""},
+                        {"", "#", "", "#", "#", "#", "", "", "#", ""},
+                        {"", "", "", "", "", "", "", "", "", ""},
+                        {"", "", "", "", "#", "", "", "#", "#", "#"},
+                        {"", "", "", "", "#", "", "", "", "", ""},
+                        {"", "", "#", "", "", "", "", "", "", ""},
+                        {"", "", "", "", "#", "#", "", "", "", ""},
+                        {"", "#", "", "", "", "", "", "#", "#", ""}
+                };
 
         return gameField;
     }
 
-    public int[][] generateEmptyGameField(int height, int width) {
-        int[][] emptyGameField = new int[height][width];
+    public String[][] generateEmptyGameField(int height, int width) {
+        String[][] emptyGameField = new String[height][width];
 
         for (int j = 0; j < height; j++) {
             for (int i = 0; i < width; i++) {
-                emptyGameField[j][i] = 0;
+                emptyGameField[j][i] = "";
             }
         }
 
@@ -144,7 +155,7 @@ public class Player1 extends Agent {
     }
 
     public void shoot(Point coordinate) {
-        sendMessage(generateMessage("shoot", coordinate, 0));
+        sendMessage("shoot," + toString(coordinate));
     }
 
     public Point getCoordinateForShoot() {
@@ -156,7 +167,7 @@ public class Player1 extends Agent {
 
             for (int y = 0; y < this.enemyGameField.length; y++) {
                 for (int x = 0; x < this.enemyGameField[y].length; x++) {
-                    if (this.enemyGameField[y][x] == 0) {
+                    if (this.enemyGameField[y][x].equals("")) {
                         coordinateList.add(new Point(x, y));
                     }
                 }
@@ -177,7 +188,7 @@ public class Player1 extends Agent {
 
         for (int y = 0; y < this.enemyGameField.length; y++) {
             for (int x = 0; x < this.enemyGameField[y].length; x++) {
-                if (this.enemyGameField[y][x] == 1) {
+                if (this.enemyGameField[y][x].equals("#")) {
                     coordinateList.add(new Point(x, y));
                 }
             }
@@ -189,22 +200,22 @@ public class Player1 extends Agent {
 
             if (x != -1) {
                 if ((y - 1) >= 0) {
-                    if (this.enemyGameField[y - 1][x] == 0) {
+                    if (this.enemyGameField[y - 1][x].equals("")) {
                         return new Point(x, y - 1);
                     }
                 }
                 if ((y + 1) < this.enemyGameField.length) {
-                    if (this.enemyGameField[y + 1][x] == 0) {
+                    if (this.enemyGameField[y + 1][x].equals("")) {
                         return new Point(x, y + 1);
                     }
                 }
                 if ((x - 1) >= 0) {
-                    if (this.enemyGameField[y][x - 1] == 0) {
+                    if (this.enemyGameField[y][x - 1].equals("")) {
                         return new Point(x - 1, y);
                     }
                 }
                 if ((x + 1) < this.enemyGameField[y].length) {
-                    if (this.enemyGameField[y][x + 1] == 0) {
+                    if (this.enemyGameField[y][x + 1].equals("")) {
                         return new Point(x + 1, y);
                     }
                 }
@@ -214,11 +225,32 @@ public class Player1 extends Agent {
         return new Point(-1, -1);
     }
 
-    public String generateMessage(String command, Point coordinate, int result) {
-        return command + "," +
-                Integer.toString((int)coordinate.getY()) + "," +
-                Integer.toString((int)coordinate.getX()) + "," +
-                Integer.toString(result);
+    public void updateGameField(Point coordinate) {
+
+        int x = (int)coordinate.getX();
+        int y = (int)coordinate.getY();
+
+        if ((y - 1) >= 0) {
+            if (this.enemyGameField[y - 1][x].equals("")) {
+                this.enemyGameField[y - 1][x] = "~";
+            }
+        }
+        if ((y + 1) < this.enemyGameField.length) {
+            if (this.enemyGameField[y + 1][x].equals("")) {
+                this.enemyGameField[y + 1][x] = "~";
+            }
+        }
+        if ((x - 1) >= 0) {
+            if (this.enemyGameField[y][x - 1].equals("")) {
+                this.enemyGameField[y][x - 1] = "~";
+            }
+        }
+        if ((x + 1) < this.enemyGameField[y].length) {
+            if (this.enemyGameField[y][x + 1].equals("")) {
+                this.enemyGameField[y][x + 1] = "~";
+            }
+        }
+
     }
 
     public void printGameStepInfo(String playerName, Point coordinate, String messageInfo) {
@@ -232,18 +264,19 @@ public class Player1 extends Agent {
         for (int y = 0; y < this.enemyGameField.length; y++) {
             String line = "";
             for (int x = 0; x < this.enemyGameField[y].length; x++) {
-                if (this.enemyGameField[y][x] == 1) {
-                    line += " #";
-                }
-                else if (this.enemyGameField[y][x] == -1) {
-                    line += " .";
+                if (this.enemyGameField[y][x].equals("")) {
+                    line += "?" + " ";
                 }
                 else {
-                    line += " ?";
+                    line += this.enemyGameField[y][x] + " ";
                 }
             }
             System.out.println(line);
         }
+    }
+
+    public String toString(Point coordinate){
+        return (Integer.toString((int)coordinate.getY()) + "," + Integer.toString((int)coordinate.getX()));
     }
 
     public void sendMessage(String message) {
